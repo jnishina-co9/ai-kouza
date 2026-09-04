@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>進化した無料版ChatGPTを使いこなす</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ink:#2D2D2D;
+    --ink-soft:#7A7A7A;
+    --paper:#FFFFFF;
+    --surface:#FFFFFF;
+    --surface-alt:#FBFAF7;
+    --accent:#F5E000;
+    --accent-deep:#33430D;
+    --accent-tint:rgba(245,224,0,.16);
+    --warm:#7B9A3C;
+    --warm-deep:#5C7429;
+    --warm-tint:rgba(123,154,60,.10);
+    --line:rgba(40,40,40,.09);
+    --toc-width:260px;
+  }
+
+  *, *::before, *::after{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+    font-weight:400;
+    line-height:1.85;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3{
+    font-family:"Noto Sans JP",sans-serif;
+    font-weight:600;
+    line-height:1.4;
+    text-wrap:balance;
+    margin:0;
+    letter-spacing:.01em;
+  }
+  p{margin:0;}
+  ul{margin:0;padding:0;list-style:none;}
+  .num{font-family:"Outfit",sans-serif;font-variant-numeric:tabular-nums;}
+  ::selection{background:var(--accent);color:var(--ink);}
+
+  /* ---------- icons ---------- */
+  .sprite{display:none;}
+  .icon{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* ---------- progress + nav ---------- */
+  .progressbar{
+    position:fixed;top:0;left:0;height:3px;width:0%;
+    background:var(--accent-deep);
+    z-index:100;transition:width .1s linear;
+  }
+  .counterpill{
+    position:fixed;left:1.1rem;bottom:1.1rem;z-index:90;
+    background:var(--surface);border:1px solid var(--line);
+    padding:.5em 1em;
+    font-family:"Outfit",sans-serif;font-size:.85rem;font-weight:600;
+    color:var(--ink-soft);
+    display:flex;align-items:center;gap:.35em;
+  }
+  .counterpill span{color:var(--ink);font-weight:700;font-size:1.05em;}
+  .toc{
+    position:fixed;left:0;top:0;bottom:0;width:var(--toc-width);
+    background:var(--surface);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;z-index:90;
+    transition:transform .25s ease;
+  }
+  .toc__brand{
+    display:block;width:100%;padding:1.6rem 1.5rem 1.15rem;border-bottom:1px solid var(--line);flex:none;
+    background:none;border-left:none;border-right:none;border-top:none;text-align:left;font:inherit;cursor:pointer;
+    transition:background .15s;
+  }
+  .toc__brand:hover{background:var(--surface-alt);}
+  .toc__brand-title{font-weight:700;font-size:.92rem;line-height:1.5;color:var(--accent-deep);}
+  .toc__list{flex:1;overflow-y:auto;padding:.7rem 0 1.2rem;display:flex;flex-direction:column;}
+  .toc__list::-webkit-scrollbar{width:4px;}
+  .toc__list::-webkit-scrollbar-track{background:transparent;}
+  .toc__list::-webkit-scrollbar-thumb{background:var(--line);}
+  .toc__item{
+    display:flex;align-items:baseline;gap:.75em;
+    padding:.62em 1.5rem;border-left:3px solid transparent;
+    font-size:.86rem;color:var(--ink-soft);text-decoration:none;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .toc__item:hover{background:var(--surface-alt);color:var(--ink);}
+  .toc__item.active{background:var(--accent-tint);color:var(--ink);border-left-color:var(--ink);font-weight:700;}
+  .toc__num{font-family:"Outfit",sans-serif;font-weight:600;font-size:.82em;min-width:1.6em;color:var(--ink-soft);}
+  .toc__item.active .toc__num{color:var(--ink);}
+  body.toc-collapsed .toc{transform:translateX(-100%);}
+
+  main{margin-left:var(--toc-width);transition:margin-left .25s ease;}
+  body.toc-collapsed main{margin-left:0;}
+
+  .toc-toggle{
+    position:fixed;top:50%;left:var(--toc-width);transform:translate(-50%,-50%);
+    width:28px;height:44px;background:var(--surface);border:1px solid var(--line);border-left:none;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;z-index:95;color:var(--ink-soft);
+    transition:left .25s ease,color .15s;
+  }
+  .toc-toggle:hover{color:var(--ink);}
+  .toc-toggle svg{width:16px;height:16px;transition:transform .25s ease;}
+  body.toc-collapsed .toc-toggle{left:0;transform:translateY(-50%);}
+  body.toc-collapsed .toc-toggle svg{transform:rotate(180deg);}
+
+  @media (min-width:961px){ .progressbar{left:var(--toc-width);} .counterpill{display:none;} }
+  body.toc-collapsed .progressbar{left:0;}
+  @media (max-width:960px){ .toc{display:none;} .toc-toggle{display:none;} main{margin-left:0;} }
+
+  .totop{
+    position:fixed;right:1.1rem;bottom:1.1rem;z-index:90;
+    width:44px;height:44px;
+    background:var(--accent-deep);border:1px solid var(--accent-deep);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--paper);cursor:pointer;padding:0;
+    opacity:0;visibility:hidden;transform:translateY(8px);
+    transition:opacity .25s ease,transform .25s ease,visibility 0s .25s,background .15s,border-color .15s;
+  }
+  .totop.is-visible{opacity:1;visibility:visible;transform:none;transition:opacity .25s ease,transform .25s ease,background .15s,border-color .15s;}
+  .totop:hover{background:var(--paper);border-color:var(--accent-deep);color:var(--accent-deep);}
+  .totop svg{width:20px;height:20px;}
+
+  /* ---------- slide anatomy ---------- */
+  .slide{
+    min-height:100dvh;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(3rem,9vw,5.5rem) clamp(1.35rem,7vw,6rem);
+    position:relative;
+    background:var(--surface);
+  }
+  .slide:nth-of-type(even){background:var(--surface-alt);}
+  .slide-inner{
+    max-width:900px;margin:0 auto;width:100%;
+    opacity:0;transform:translateY(26px);
+    transition:opacity .75s ease,transform .75s ease;
+  }
+  .slide.in-view .slide-inner{opacity:1;transform:none;}
+
+  .eyebrow{
+    display:flex;align-items:center;gap:.7em;margin-bottom:1.1em;
+    font-family:"Outfit",sans-serif;font-weight:600;font-size:.85rem;
+    letter-spacing:.14em;color:var(--accent-deep);
+  }
+  .eyebrow .idx{font-size:1.35em;font-weight:700;color:var(--ink);}
+  .eyebrow .idx small{font-size:.6em;color:var(--ink-soft);margin-left:.15em;}
+  .eyebrow .kicker{color:var(--ink-soft);letter-spacing:.1em;}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--accent-deep);}
+
+  .slide-title{font-size:clamp(1.55rem,3.6vw,2.5rem);margin-bottom:1.2em;}
+  .slide-title em{color:var(--ink);font-style:normal;}
+  .slide-title em.warm{text-decoration:none;background:var(--accent-tint);padding:0 .22em;}
+
+  .key-message{
+    display:flex;gap:.7em;align-items:flex-start;
+    border-left:3px solid var(--accent-deep);
+    background:var(--accent-tint);
+    padding:1.4em 1.2em;
+    font-weight:500;font-size:1.2rem;color:var(--ink);margin-top:1.8em;
+  }
+  .key-message svg{flex:none;width:20px;height:20px;color:var(--accent-deep);margin-top:.15em;}
+
+  .body-copy{font-weight:400;font-size:1.02rem;color:var(--ink);}
+  .body-copy + .body-copy{margin-top:.9em;}
+  .bullet-list + .body-copy{margin-top:.8em;}
+
+  h3.block-title{font-weight:700;font-size:1.02rem;margin-bottom:.7em;color:var(--ink);}
+  .block{margin-top:1.7em;}
+
+  .bullet-list li{
+    position:relative;padding-left:1.3em;margin-bottom:.55em;
+    font-weight:400;
+  }
+  .bullet-list li::before{
+    content:"";position:absolute;left:0;top:.65em;
+    width:6px;height:6px;background:var(--accent-deep);
+  }
+  .bullet-list.warm li::before{background:var(--warm);}
+
+  /* chips (機能一覧) */
+  .chip-list{display:flex;flex-wrap:wrap;gap:.6em;margin-top:.3em;}
+  .chip{
+    display:flex;align-items:center;gap:.5em;
+    background:var(--surface);border:1px solid var(--line);
+    padding:.55em 1em;font-size:.92rem;font-weight:500;
+  }
+  .slide:nth-of-type(even) .chip{background:var(--surface-alt);}
+  .chip svg{width:16px;height:16px;color:var(--accent-deep);flex:none;}
+
+  /* data tables (できること／プラン比較) */
+  .table-wrap{overflow-x:auto;margin-top:.8em;-webkit-overflow-scrolling:touch;}
+  .data-table{width:100%;min-width:480px;border-collapse:collapse;}
+  .data-table th,.data-table td{padding:.85em 1em;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem;font-weight:400;color:var(--ink);vertical-align:top;}
+  .data-table thead th{font-weight:700;font-size:.8rem;letter-spacing:.04em;color:var(--ink-soft);border-bottom:2px solid var(--accent-deep);}
+  .data-table tbody tr:last-child td{border-bottom:none;}
+  .data-table td:first-child,.data-table th:first-child{font-weight:600;white-space:nowrap;padding-right:1.4em;}
+  @media (max-width:640px){.data-table{font-size:.85rem;} .data-table th,.data-table td{padding:.65em .6em;}}
+
+  /* number badge cards (①②③) */
+  .card-grid{display:grid;gap:1rem;margin-top:.4em;}
+  .card-grid.cols-2{grid-template-columns:repeat(2,1fr);}
+  .card-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  #s1 .card-grid,#s3 .card-grid,#s8 .card-grid,#s12 .card-grid,#s15 .card-grid{grid-template-columns:1fr;}
+  @media (max-width:760px){.card-grid.cols-2,.card-grid.cols-3{grid-template-columns:1fr;}}
+  .num-card{
+    background:var(--surface);border:1px solid var(--line);
+    padding:1.3em 1.2em;
+    display:flex;flex-direction:column;gap:.6em;
+    text-decoration:none;color:inherit;
+    transition:transform .25s,border-color .25s;
+  }
+  .slide:nth-of-type(even) .num-card{background:var(--surface-alt);}
+  .slide:nth-of-type(even) .num-card:hover{background:var(--accent-deep);}
+  .num-card .badge{
+    width:2.1em;height:2.1em;
+    background:var(--accent);color:var(--accent-deep);
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Outfit",sans-serif;font-weight:700;font-size:1.05rem;
+  }
+  .num-card p{font-size:.95rem;color:var(--ink-soft);}
+  .num-card strong{font-weight:700;color:var(--ink);font-size:1.02rem;}
+  .num-card-head{display:flex;align-items:center;gap:1em;}
+  #s3 .num-card strong{font-size:1rem;}
+  #s3 .num-card{flex-direction:row;align-items:center;flex-wrap:wrap;column-gap:1em;row-gap:.5em;}
+  #s3 .num-card .goto{flex-basis:100%;}
+  #s8 .num-card strong{font-size:1rem;}
+  #s12 .num-card{flex-direction:row;align-items:center;gap:1em;}
+  #s12 .num-card p{font-size:1rem;font-weight:700;color:var(--ink);}
+  #s12 .num-card:hover p{color:var(--paper);}
+  .num-card .goto{margin-top:auto;font-size:.78rem;color:var(--accent-deep);font-weight:600;display:flex;align-items:center;justify-content:flex-end;gap:.3em;}
+  .num-card:hover{background:var(--accent-deep);border-color:var(--accent-deep);transform:translateY(-3px);}
+  .num-card:hover strong,.num-card:hover p,.num-card:hover .goto{color:var(--paper);}
+
+  /* chat bubble */
+  .bubble-stack{display:flex;flex-direction:column;gap:.55em;margin:1.4em 0;}
+  .bubble-row{display:flex;justify-content:flex-end;}
+  .bubble{
+    position:relative;
+    background:var(--accent-deep);color:var(--paper);font-weight:400;font-size:.98rem;
+    padding:.75em 1.15em;
+    max-width:min(78%,440px);
+    border-radius:18px;
+    opacity:0;transform:scale(.85) translateY(6px);transition:opacity .4s ease,transform .4s ease;
+  }
+  .bubble::after{
+    content:"";position:absolute;top:14px;right:-7px;
+    width:0;height:0;
+    border-style:solid;border-width:6px 0 6px 8px;
+    border-color:transparent transparent transparent var(--accent-deep);
+  }
+  .slide.in-view .bubble{opacity:1;transform:none;}
+  .bubble-note{
+    display:flex;align-items:center;gap:.5em;margin-top:.6em;
+    color:var(--ink-soft);font-size:.92rem;
+  }
+  .bubble-note svg{width:16px;height:16px;color:var(--accent-deep);flex:none;}
+
+  /* persona list */
+  .persona-grid{display:grid;gap:.6em;margin-top:.5em;}
+  .persona-item{
+    display:flex;gap:.7em;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--line);
+    padding:.8em 1em;
+  }
+  .slide:nth-of-type(even) .persona-item{background:var(--surface-alt);}
+  .persona-item svg{width:19px;height:19px;flex:none;margin-top:.1em;}
+  .persona-item.good svg{color:var(--accent-deep);}
+  .persona-item.consider svg{color:var(--warm);}
+  #s14 .persona-item{transition:transform .2s,border-color .2s,background .2s,color .2s;}
+  #s14 .persona-item:hover{transform:translateY(-3px);color:var(--paper);}
+  #s14 .persona-item.good:hover{background:var(--accent-deep);border-color:var(--accent-deep);}
+  #s14 .persona-item.consider:hover{background:var(--warm-deep);border-color:var(--warm-deep);}
+  #s14 .persona-item:hover svg{color:var(--paper);}
+
+  .note{
+    margin-top:1.4em;padding:.9em 1.1em;
+    background:var(--surface);border:1px solid var(--line);
+    font-size:.9rem;color:var(--ink-soft);display:flex;gap:.6em;align-items:flex-start;
+  }
+  .note svg{width:16px;height:16px;flex:none;margin-top:.2em;color:var(--ink-soft);}
+  .block-title + .note{margin-top:0;}
+
+  /* hero */
+  .slide--hero{background:var(--paper);}
+  .slide--hero .key-message{margin-top:2em;margin-bottom:0;}
+  .slide--hero .key-message svg{width:26px;height:26px;}
+  h1.hero-title{font-size:clamp(1.45rem,3.6vw,2.4rem);margin-bottom:1.2em;}
+  h1.hero-title .hl{color:var(--accent-deep);}
+  .scroll-cue{
+    position:absolute;bottom:2.2rem;left:50%;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:.4em;
+    color:var(--ink-soft);font-family:"Outfit",sans-serif;font-size:.75rem;letter-spacing:.1em;
+    animation:bob 2.2s ease-in-out infinite;
+  }
+  .scroll-cue svg{width:18px;height:18px;}
+  @keyframes bob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,8px);}}
+
+  /* footer */
+  .site-footer{
+    padding:2.6rem 1.5rem;
+    text-align:center;
+    background:var(--surface-alt);
+    border-top:1px solid var(--line);
+  }
+  .site-footer p{color:var(--ink-soft);font-size:.8rem;letter-spacing:.03em;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+    .slide-inner{opacity:1 !important;transform:none !important;}
+    .bubble{opacity:1 !important;transform:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true">
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6L12 3z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.3" r=".6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 01-8.5 8.5 8.4 8.4 0 01-4-1L3 20l1.2-3.6A8.4 8.4 0 013 11.5 8.5 8.5 0 0111.5 3 8.5 8.5 0 0121 11.5z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12"/><path d="M14 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><path d="M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-chevron-left" viewBox="0 0 24 24"><polyline points="15 6 9 12 15 18"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5.5-5.5L9 17"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3h7l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v4h4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><line x1="5" y1="20" x2="5" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="19" y1="20" x2="19" y2="15"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0"/><line x1="12" y1="18" x2="12" y2="21"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.3" y2="15.3"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M3 10v4a1 1 0 001 1h2l5 4V5L6 9H4a1 1 0 00-1 1z"/><path d="M16 8a5 5 0 010 8"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="21"/><line x1="5" y1="7" x2="19" y2="7"/><path d="M5 7l-3 6a3 3 0 006 0z"/><path d="M19 7l-3 6a3 3 0 006 0z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-square" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/></symbol>
+</svg>
+
+<div class="progressbar" id="progressbar"></div>
+<div class="counterpill" id="counterpill"><span>01</span> / 15</div>
+<aside class="toc" id="toc" aria-label="目次">
+  <button class="toc__brand" id="tocBrand" type="button" aria-label="トップへ戻る">
+    <div class="toc__brand-title">生成AI講座 資料</div>
+  </button>
+  <nav class="toc__list" id="tocList"></nav>
+</aside>
+<button class="toc-toggle" id="tocToggle" type="button" aria-label="目次を隠す">
+  <svg class="icon"><use href="#i-chevron-left"/></svg>
+</button>
+<button class="totop" id="totop" type="button" aria-label="トップへ戻る">
+  <svg class="icon"><use href="#i-arrow-up"/></svg>
+</button>
+
+<main>
+<section class="slide slide--hero" id="s1" data-idx="1" data-label="タイトル">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">01<small>/15</small></span></div>
+    <h1 class="hero-title"><span class="hl">ChatGPT</span>無料版が大幅進化！<br>アップデート・初期設定・プランの選び方</h1>
+    <div class="card-grid cols-3">
+      <a class="num-card" href="#s3">
+        <span class="badge">1</span>
+        <strong>2026年8月のアップデートで何が変わったか</strong>
+        <span class="goto">詳しく見る →</span>
+      </a>
+      <a class="num-card" href="#s8">
+        <span class="badge">2</span>
+        <strong>最初にやっておきたい3つの設定</strong>
+        <span class="goto">詳しく見る →</span>
+      </a>
+      <a class="num-card" href="#s12">
+        <span class="badge">3</span>
+        <strong>無料版と有料版の違い・選び方</strong>
+        <span class="goto">詳しく見る →</span>
+      </a>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-sparkle"/></svg>
+      進化した無料版で「ちょっと試すもの」から「毎日使うAI」へ
+    </div>
+  </div>
+  <div class="scroll-cue">SCROLL<svg class="icon"><use href="#i-chevron-down"/></svg></div>
+</section>
+
+<section class="slide" id="s2" data-idx="2" data-label="できること・4つの活用法">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">02<small>/15</small></span></div>
+    <h2 class="slide-title">ChatGPTでできること｜4つの活用法</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>カテゴリー</th><th>内容（例）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>話す・見る</td><td>声で会話／写真を見せて質問・翻訳</td></tr>
+          <tr><td>作る</td><td>言葉で伝えるだけでオリジナル画像を作成</td></tr>
+          <tr><td>調べる・読む</td><td>調べ物、長文の要約、やさしい言い換え</td></tr>
+          <tr><td>資料づくり</td><td>案内文の作成、表の計算、スライドの構成案づくりなど</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-chat"/></svg>
+      生活にも仕事にも、幅広く相談しながら使える
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s3" data-idx="3" data-label="何が変わった？">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">03<small>/15</small></span></div>
+    <h2 class="slide-title">2026年8月アップデート｜何が変わった？</h2>
+    <h3 class="block-title">大きな変更は3つ</h3>
+    <div class="card-grid cols-3">
+      <a class="num-card" href="#s4">
+        <span class="badge">1</span>
+        <strong>普段のテキストチャットが無制限に</strong>
+        <span class="goto">詳しく見る →</span>
+      </a>
+      <a class="num-card" href="#s5">
+        <span class="badge">2</span>
+        <strong>無料版の標準AIモデルが「GPT-5.6 Luna」に</strong>
+        <span class="goto">詳しく見る →</span>
+      </a>
+      <a class="num-card" href="#s6">
+        <span class="badge">3</span>
+        <strong>難しい質問にじっくり考える「Think」が無料版でも使えるように</strong>
+        <span class="goto">詳しく見る →</span>
+      </a>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-sparkle"/></svg>
+      無料版でも、普段使いならかなり本格的に使えるようになった
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s4" data-idx="4" data-label="変更点①">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">04<small>/15</small></span><span class="kicker">変更点 ①</span></div>
+    <h2 class="slide-title">テキストチャットが<em>無制限</em>に</h2>
+    <h3 class="block-title">できるようになったこと</h3>
+    <ul class="bullet-list">
+      <li>通常のテキストチャットが無制限に</li>
+      <li>「文章を作る」「質問する」「相談する」といった普段使いに便利</li>
+    </ul>
+    <div class="block">
+      <h3 class="block-title">具体例</h3>
+      <div class="bubble-stack">
+        <div class="bubble-row"><div class="bubble">このメールを丁寧にして</div></div>
+        <div class="bubble-row"><div class="bubble">今日の夕飯を考えて</div></div>
+        <div class="bubble-row"><div class="bubble">旅行の予定を作って</div></div>
+        <div class="bubble-row"><div class="bubble">この文章を分かりやすくして</div></div>
+      </div>
+    </div>
+    <div class="block">
+      <h3 class="block-title">注意点</h3>
+      <div class="note">
+        <svg class="icon"><use href="#i-info"/></svg>
+        「無制限」なのは、あくまで普段のテキストチャットのこと。画像生成・ファイル・データ分析・音声・Deep Research（詳しい情報調査）などは、それぞれ別に利用上限があります。
+      </div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-chat"/></svg>
+      文字でのやり取りは、回数を気にせず使えるようになった
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s5" data-idx="5" data-label="変更点②Luna">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">05<small>/15</small></span><span class="kicker">変更点 ②</span></div>
+    <h2 class="slide-title">新モデル「<em>GPT-5.6 Luna</em>」</h2>
+    <h3 class="block-title">GPT-5.6 Lunaとは？</h3>
+    <p class="body-copy">AIモデルが新しくなり、無料版・Goプランの標準モデルに</p>
+    <div class="block">
+      <h3 class="block-title">得意なこと</h3>
+      <div class="chip-list">
+        <span class="chip">文章作成</span>
+        <span class="chip">メール・お知らせ文の作成</span>
+        <span class="chip">日常の質問</span>
+        <span class="chip">アイデア出し</span>
+        <span class="chip">情報整理</span>
+        <span class="chip">旅行や料理の相談</span>
+      </div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-sparkle"/></svg>
+      無料版でも、新しい頭脳「Luna」が標準で使える
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s6" data-idx="6" data-label="変更点③Think">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">06<small>/15</small></span><span class="kicker">変更点 ③</span></div>
+    <h2 class="slide-title">熟考機能「<em>Think</em>」</h2>
+    <h3 class="block-title">Thinkとは？</h3>
+    <p class="body-copy">すぐに答えを出すのではなく、時間をかけて深く考えてもらうよう依頼する機能</p>
+    <div class="block">
+      <h3 class="block-title">こんなときに便利</h3>
+      <div class="chip-list">
+        <span class="chip">複数のプランを比較したい</span>
+        <span class="chip">条件の多い相談をしたい</span>
+        <span class="chip">文章をいろいろな角度からチェックしたい</span>
+        <span class="chip">複雑な問題を整理したい</span>
+      </div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-sparkle"/></svg>
+      難しい質問は、AIにじっくり考えてもらえる（利用回数に制限あり）
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s7" data-idx="7" data-label="広告について">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">07<small>/15</small></span><span class="kicker">知っておきたいこと</span></div>
+    <h2 class="slide-title">広告について</h2>
+    <ul class="bullet-list">
+      <li>無料版・Goプランでは、広告が表示される場合がある</li>
+      <li>Plus以上の有料プランでは広告は表示されない</li>
+      <li>回答と広告を見分け、不用意にクリックしないよう注意</li>
+    </ul>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-speaker"/></svg>
+      無料で使えるサービスを支える仕組みとして、広告が導入されている
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s8" data-idx="8" data-label="設定の案内">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">08<small>/15</small></span></div>
+    <h2 class="slide-title">最初に確認したい3つの設定</h2>
+    <div class="card-grid cols-3">
+      <a class="num-card" href="#s9"><div class="num-card-head"><span class="badge">1</span><strong>自分向けにする</strong></div><p>→ パーソナライズ</p><span class="goto">詳しく見る →</span></a>
+      <a class="num-card" href="#s10"><div class="num-card-head"><span class="badge">2</span><strong>データの扱いを確認する</strong></div><p>→ データコントロール</p><span class="goto">詳しく見る →</span></a>
+      <a class="num-card" href="#s11"><div class="num-card-head"><span class="badge">3</span><strong>アカウントを守る</strong></div><p>→ セキュリティ</p><span class="goto">詳しく見る →</span></a>
+    </div>
+    <div class="block">
+      <div class="note">
+        <svg class="icon"><use href="#i-info"/></svg>
+        <div>
+          このほかに「外部サービスと連携する」機能などもありますが、まずはこの3つで十分です。<br>
+          すべてを設定する必要はありません。
+        </div>
+      </div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-check"/></svg>
+      3つ押さえれば、安心して自分好みに使える
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s9" data-idx="9" data-label="設定①パーソナライズ">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">09<small>/15</small></span><span class="kicker">設定 ①</span></div>
+    <h2 class="slide-title">自分向けにする「<em>パーソナライズ</em>」</h2>
+    <h3 class="block-title">パーソナライズの中には、大きく分けて3つの項目がある</h3>
+    <div class="block">
+      <h3 class="block-title">① あなたについて（自分のこと）</h3>
+      <p class="body-copy">呼んでほしい名前、職業、使っている機器など</p>
+      <div class="chip-list">
+        <span class="chip">中小企業の経理担当</span>
+        <span class="chip">パソコンはWindows、スマホはAndroid</span>
+      </div>
+    </div>
+    <div class="block">
+      <h3 class="block-title">② カスタム指示（答え方の希望）</h3>
+      <p class="body-copy">どう答えてほしいか（ルール）</p>
+      <div class="chip-list">
+        <span class="chip">結論から説明してほしい</span>
+        <span class="chip">専門用語には説明をつけてほしい</span>
+      </div>
+    </div>
+    <div class="block">
+      <h3 class="block-title">③ メモリ（ChatGPTが覚える）</h3>
+      <p class="body-copy">会話の内容を自動で覚える機能</p>
+      <p class="body-copy">保存された内容は、あとから確認・削除できる</p>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-sparkle"/></svg>
+      一度設定すれば、次からは自分好みの答え方をしてくれる
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s10" data-idx="10" data-label="設定②データコントロール">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">10<small>/15</small></span><span class="kicker">設定 ②</span></div>
+    <h2 class="slide-title">データの扱いを確認する「<em>データコントロール</em>」</h2>
+    <h3 class="block-title">学習に使うかどうかを選べる</h3>
+    <p class="body-copy">「モデルの改善に利用する」をオフにすると、以後の会話は学習に使われなくなる</p>
+    <div class="block">
+      <h3 class="block-title">一時チャット</h3>
+      <p class="body-copy">残したくない会話に使える機能</p>
+      <div class="chip-list">
+        <span class="chip">履歴に残らない</span>
+        <span class="chip">メモリにも残らない</span>
+        <span class="chip">学習にも使われない</span>
+      </div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-info"/></svg>
+      自分の会話データの扱いは、自分で選べる
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s11" data-idx="11" data-label="設定③セキュリティ">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">11<small>/15</small></span><span class="kicker">設定 ③</span></div>
+    <h2 class="slide-title">アカウントを守る「<em>セキュリティ</em>」</h2>
+    <h3 class="block-title">ログイン方法で、守る場所が変わる</h3>
+    <ul class="bullet-list">
+      <li>Googleアカウントでログイン<br>→ Googleアカウントの「2段階認証」で守る</li>
+      <li>メールアドレスとパスワードでログイン<br>→ ChatGPT側の「多要素認証（MFA）」で守る</li>
+    </ul>
+    <div class="block">
+      <h3 class="block-title">2段階認証とは？</h3>
+      <p class="body-copy">パスワードに加えて、スマホでもう1つ確認する仕組み</p>
+      <p class="body-copy">万が一パスワードを知られても、ログインされずに済む</p>
+      <div class="note">
+        <svg class="icon"><use href="#i-info"/></svg>
+        お仕事で使う場合は、勤務先の情報セキュリティ・個人情報保護・AI利用ルールも必ず確認を！
+      </div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-shield"/></svg>
+      パスワードだけに頼らない。気になる方はぜひ設定を
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s12" data-idx="12" data-label="無料/有料の違い">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">12<small>/15</small></span></div>
+    <h2 class="slide-title">無料と有料の違い｜3つのポイント</h2>
+    <h3 class="block-title">比較する3つのポイント</h3>
+    <div class="card-grid cols-3">
+      <div class="num-card"><span class="badge">1</span><p>AIの性能・考える力　→　より高性能なモデルを使える</p></div>
+      <div class="num-card"><span class="badge">2</span><p>高度な作業　→　複雑な仕事をまとめて任せやすい</p></div>
+      <div class="num-card"><span class="badge">3</span><p>利用できる機能・利用枠　→　画像、ファイル、データ分析などをより多く使える</p></div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-scale"/></svg>
+      無料版が進化しても、有料版にははっきりしたメリットがある
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s13" data-idx="13" data-label="プラン比較表">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">13<small>/15</small></span></div>
+    <h2 class="slide-title">プラン比較表</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>プラン</th><th>月額（税込）</th><th>主な特徴</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Free（無料）</td><td class="num">0円</td><td>テキストチャット無制限、広告表示あり</td></tr>
+          <tr><td>Go</td><td class="num">1,400円</td><td>メッセージ数・画像生成数が増加、広告表示あり</td></tr>
+          <tr><td>Plus</td><td class="num">3,000円</td><td>高性能モデル、広告なし、仕事での本格活用に</td></tr>
+          <tr><td>Pro</td><td class="num">16,800円〜</td><td>利用量が5倍・20倍に拡大、調査やコーディングに最適</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-chart"/></svg>
+      料金が上がるほど「性能」「利用枠」「広告の有無」が変わる
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s14" data-idx="14" data-label="選び方の目安">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">14<small>/15</small></span></div>
+    <h2 class="slide-title">選び方の目安とまとめ</h2>
+    <h3 class="block-title">無料版で十分な人</h3>
+    <div class="persona-grid">
+      <div class="persona-item good"><svg class="icon"><use href="#i-check"/></svg><span>メール・お知らせ文の作成</span></div>
+      <div class="persona-item good"><svg class="icon"><use href="#i-check"/></svg><span>文章を分かりやすくしたい</span></div>
+      <div class="persona-item good"><svg class="icon"><use href="#i-check"/></svg><span>料理や旅行の相談</span></div>
+      <div class="persona-item good"><svg class="icon"><use href="#i-check"/></svg><span>日常の疑問や軽い調べ物</span></div>
+    </div>
+    <div class="block">
+      <h3 class="block-title">有料版を検討する人</h3>
+      <div class="persona-grid">
+        <div class="persona-item consider"><svg class="icon"><use href="#i-plus"/></svg><span>複雑な調査を頻繁に行う</span></div>
+        <div class="persona-item consider"><svg class="icon"><use href="#i-plus"/></svg><span>大量のファイルやデータを扱う</span></div>
+        <div class="persona-item consider"><svg class="icon"><use href="#i-plus"/></svg><span>画像生成を頻繁に使う</span></div>
+        <div class="persona-item consider"><svg class="icon"><use href="#i-plus"/></svg><span>利用上限に何度も達してしまう</span></div>
+      </div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-scale"/></svg>
+      「たくさん使うから有料」ではなく「やりたいことが無料版では難しいから有料」
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s15" data-idx="15" data-label="まとめ">
+  <div class="slide-inner">
+    <div class="eyebrow"><span class="idx num">15<small>/15</small></span></div>
+    <h2 class="slide-title">まとめ</h2>
+    <div class="card-grid cols-2">
+      <div class="num-card"><span class="badge">1</span><p>無料版でもテキストチャットが無制限に、Thinkも使えるように</p></div>
+      <div class="num-card"><span class="badge">2</span><p>ただし画像・ファイル・データ分析などには別の上限がある</p></div>
+      <div class="num-card"><span class="badge">3</span><p>設定は「自分向け・データ確認・アカウント保護」の3つでOK</p></div>
+      <div class="num-card"><span class="badge">4</span><p>まずは無料で試し、必要になったら有料版を検討する</p></div>
+    </div>
+    <div class="key-message">
+      <svg class="icon"><use href="#i-sparkle"/></svg>
+      進化した無料版ChatGPTで、毎日のちょっとした「困った」を解決してみよう！
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <p>© <span class="num">2026</span> 『最新！みんなで楽しむ生成AI講座』</p>
+</footer>
+
+</main>
+
+<script>
+const slides = [...document.querySelectorAll('.slide')];
+const progressbar = document.getElementById('progressbar');
+const counterpill = document.getElementById('counterpill');
+const tocList = document.getElementById('tocList');
+const tocToggle = document.getElementById('tocToggle');
+const totop = document.getElementById('totop');
+const TOC_KEY = 'chatgpt-free-update-toc-collapsed';
+
+const setTocCollapsed = collapsed => {
+  document.body.classList.toggle('toc-collapsed', collapsed);
+  tocToggle.setAttribute('aria-label', collapsed ? '目次を表示' : '目次を隠す');
+  try { localStorage.setItem(TOC_KEY, collapsed ? '1' : '0'); } catch {}
+};
+
+let savedTocState = null;
+try { savedTocState = localStorage.getItem(TOC_KEY); } catch {}
+setTocCollapsed(savedTocState === '1');
+tocToggle.addEventListener('click', () => setTocCollapsed(!document.body.classList.contains('toc-collapsed')));
+
+const tocItems = slides.map((slide, i) => {
+  const a = document.createElement('a');
+  a.className = 'toc__item';
+  a.href = `#${slide.id}`;
+  a.innerHTML = `<span class="toc__num">${String(i + 1).padStart(2, '0')}</span><span>${slide.dataset.label}</span>`;
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    slide.scrollIntoView({behavior: 'smooth', block: 'start'});
+  });
+  tocList.appendChild(a);
+  return a;
+});
+tocItems[0].classList.add('active');
+
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
+}, {threshold: 0.22});
+
+const activeObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting || e.intersectionRatio <= 0.5) return;
+    const current = slides.indexOf(e.target);
+    tocItems.forEach((item, i) => item.classList.toggle('active', i === current));
+    counterpill.innerHTML = `<span>${String(current + 1).padStart(2, '0')}</span> / ${slides.length}`;
+  });
+}, {threshold: [0.5]});
+
+slides.forEach(slide => {
+  revealObserver.observe(slide);
+  activeObserver.observe(slide);
+});
+
+const onScroll = () => {
+  const root = document.documentElement;
+  const scrollable = root.scrollHeight - root.clientHeight;
+  progressbar.style.width = (scrollable > 0 ? root.scrollTop / scrollable * 100 : 0) + '%';
+  totop.classList.toggle('is-visible', root.scrollTop > window.innerHeight * 0.6);
+};
+document.addEventListener('scroll', onScroll, {passive: true});
+onScroll();
+
+totop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+document.getElementById('tocBrand').addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+</script>
+</body>
+</html>
