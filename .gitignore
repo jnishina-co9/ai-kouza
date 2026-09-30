@@ -1,1 +1,6 @@
-20260905.md
+# Markdown files (not for public)
+*.md
+
+# AI tools (not for public)
+.agents/
+.claude/
